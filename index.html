@@ -9176,101 +9176,95 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // ĐỔI ĐƯỜNG DẪN API VỀ FILE PHP CỦA BẠN
-        const urlWish = 'http://thiep-cuoi-mdat.online/Thanh-Huong-demo-v2/user/save.php?type=wish'; // FORM5 sẽ lưu vào data1.json
-        const urlRsvp = 'http://thiep-cuoi-mdat.online/Thanh-Huong-demo-v2/user/save.php?type=rsvp'; // FORM6 sẽ lưu vào data2.json
-        const source = "website";
+        // 👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY (Giữ nguyên phần ?type=...)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwF8qFV-uihDs6GCS9XU9JOW07im4M9qPyaD1K0oE_Pzty_zuVEoiIWJxPYvl3j2IbEYQ/exec'; 
+        
+        // Tạo link riêng cho từng form dựa trên link gốc
+        const urlWish = scriptURL + '?type=wish'; 
+        const urlRsvp = scriptURL + '?type=rsvp';
 
         async function postData(data, url) {
             try {
+                // Google Apps Script yêu cầu mode 'no-cors' hoặc xử lý redirect đặc biệt
+                // Cách đơn giản nhất để gửi data sang Google Sheet từ client:
                 const res = await fetch(url, {
                     method: 'POST',
+                    body: JSON.stringify(data),
+                    mode: 'no-cors', // Quan trọng để không bị lỗi CORS đỏ lòm
                     headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                        'Content-Type': 'text/plain' // Dùng text/plain để tránh preflight request
+                    }
                 });
-                // Kiểm tra nếu response không phải JSON hợp lệ hoặc lỗi server
-                if (!res.ok) throw new Error(`Lỗi HTTP: ${res.status}`);
-                return await res.json();
+                // Vì mode 'no-cors', ta không đọc được response JSON, nên mặc định coi là thành công
+                return { status: "success" };
             } catch (err) {
                 console.error('❌ Gửi thất bại:', err);
-                alert("Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại sau.");
+                alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
                 return null;
             }
         }
 
         // --- XỬ LÝ FORM 5 (GỬI LỜI CHÚC) ---
-        // Lưu vào data1.json
         document.getElementById("WISH_SUBMIT_BUTTON")?.addEventListener("click", async (e) => {
-            e.preventDefault(); // Ngăn form submit mặc định
+            e.preventDefault(); 
+            const btn = e.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Đang gửi..."; // Hiệu ứng loading
+            btn.style.pointerEvents = "none";
 
             const name = document.querySelector("#WISH_NAME_INPUT input")?.value.trim() || "";
             const relation = document.querySelector("#WISH_RELATION_SELECT select")?.value || "";
             const message = document.querySelector("#WISH_MESSAGE_TEXTAREA textarea")?.value.trim() || "";
             const predefined = document.querySelector("#WISH_PREDEFINED_SELECT select")?.value || "";
 
-            if (!name) return alert("Vui lòng nhập tên.");
-            // if (!relation) return alert("Vui lòng chọn mối quan hệ."); // Bỏ comment nếu bắt buộc
-
+            if (!name) { alert("Vui lòng nhập tên."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
             const combinedMessage = message && predefined ? `${message} / ${predefined}` : message || predefined;
+            if (!combinedMessage) { alert("Vui lòng nhập lời chúc."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
 
-            if (!combinedMessage) return alert("Vui lòng nhập hoặc chọn lời chúc.");
+            const data = { name, relation, wish_message: combinedMessage };
 
-            const data = {
-                name,
-                relation,
-                wish_message: combinedMessage,
-                source
-            };
-
-            const result = await postData(data, urlWish);
-            if (result && result.status === "success") {
-                alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc! `);
-                // Reset form nếu muốn
-                document.querySelector("#WISH_MESSAGE_TEXTAREA textarea").value = "";
-            }
+            await postData(data, urlWish);
+            alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc!`);
+            document.querySelector("#WISH_MESSAGE_TEXTAREA textarea").value = ""; // Xóa ô nhập
+            
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = "auto";
         });
 
-        // --- XỬ LÝ FORM 6 (XÁC NHẬN THAM DỰ) ---
-        // Lưu vào data2.json
+        // --- XỬ LÝ FORM 6 (XÁC NHẬN) ---
         document.getElementById("RSVP_SUBMIT_BUTTON")?.addEventListener("click", async (e) => {
-            e.preventDefault(); // Ngăn form submit mặc định
+            e.preventDefault();
+            const btn = e.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "Đang gửi...";
+            btn.style.pointerEvents = "none";
 
             const name = document.querySelector("#RSVP_NAME_INPUT input")?.value.trim() || "";
             const isAttendingElement = document.querySelector('#RSVP_ATTENDING_RADIO input[type="radio"]:checked');
             const isAttending = isAttendingElement ? isAttendingElement.value : "";
-            
             const party = document.querySelector("#RSVP_PARTY_SELECT select")?.value || "";
             const guestCount = document.querySelector("#RSVP_GUEST_COUNT_SELECT select")?.value || "";
             const message = document.querySelector("#RSVP_MESSAGE_TEXTAREA textarea")?.value.trim() || "";
 
-            if (!name) return alert("Vui lòng nhập tên.");
-            if (!isAttending) return alert("Vui lòng chọn tham dự hay không.");
+            if (!name) { alert("Vui lòng nhập tên."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
+            if (!isAttending) { alert("Vui lòng chọn tham dự hay không."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
+            if (isAttending !== "Xin lỗi, tôi bận mất rồi" && (!party || !guestCount)) {
+                 alert("Vui lòng chọn tiệc và số lượng khách."); 
+                 btn.innerHTML = originalText; 
+                 btn.style.pointerEvents = "auto"; 
+                 return;
+            }
+
+            const data = { name, is_attending: isAttending, party_side: party, guest_count: guestCount, message };
+
+            await postData(data, urlRsvp);
+            alert(`✅ Cảm ơn bạn ${name} đã xác nhận!`);
             
-            // Logic kiểm tra: Nếu đi thì phải chọn tiệc và số người
-            if (isAttending !== "Xin lỗi, tôi bận mất rồi") {
-                if (!party) return alert("Vui lòng chọn tiệc muốn tham dự.");
-                if (!guestCount) return alert("Vui lòng chọn số lượng khách.");
-            }
-
-            const data = {
-                name,
-                is_attending: isAttending,
-                party_side: party,
-                guest_count: guestCount,
-                message,
-                source
-            };
-
-            const result = await postData(data, urlRsvp);
-            if (result && result.status === "success") {
-                alert(`✅ Cảm ơn bạn ${name} đã xác nhận! `);
-            }
+            btn.innerHTML = originalText;
+            btn.style.pointerEvents = "auto";
         });
     });
 </script>
-
 
 
     
@@ -9331,6 +9325,7 @@
 </html>
 <!--Publish time: Sat, 29 Nov 2025 07:24:05 GMT-->
 <!--LadiPage build time: Fri, 28 Nov 2025 10:34:34 GMT-->
+
 
 
 
