@@ -9176,31 +9176,33 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // 👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY (Giữ nguyên phần ?type=...)
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbwF8qFV-uihDs6GCS9XU9JOW07im4M9qPyaD1K0oE_Pzty_zuVEoiIWJxPYvl3j2IbEYQ/exec'; 
-        
-        // Tạo link riêng cho từng form dựa trên link gốc
-        const urlWish = scriptURL + '?type=wish'; 
-        const urlRsvp = scriptURL + '?type=rsvp';
+        // 👇 DÁN LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
+        // Link phải có đuôi /exec
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbzYJcPUAO8hn3HLNuTOn3k9iJ6MPto39tJKcHSnD7MGPZnz07Yeiewj5jmyDHihRk1oAQ/exec'; 
 
-        async function postData(data, url) {
+        // Hàm gửi dữ liệu sang Google Sheet
+        async function postData(data, type) {
             try {
-                // Google Apps Script yêu cầu mode 'no-cors' hoặc xử lý redirect đặc biệt
-                // Cách đơn giản nhất để gửi data sang Google Sheet từ client:
-                const res = await fetch(url, {
+                // Thêm tham số type vào URL để Google Script biết lưu vào sheet nào
+                const url = `${scriptURL}?type=${type}`;
+
+                await fetch(url, {
                     method: 'POST',
                     body: JSON.stringify(data),
-                    mode: 'no-cors', // Quan trọng để không bị lỗi CORS đỏ lòm
+                    // 🔴 QUAN TRỌNG: Dùng no-cors để tránh lỗi chặn từ trình duyệt
+                    mode: 'no-cors', 
                     headers: {
-                        'Content-Type': 'text/plain' // Dùng text/plain để tránh preflight request
+                        // 🔴 QUAN TRỌNG: Dùng text/plain để tránh preflight request (OPTIONS)
+                        'Content-Type': 'text/plain;charset=utf-8'
                     }
                 });
-                // Vì mode 'no-cors', ta không đọc được response JSON, nên mặc định coi là thành công
-                return { status: "success" };
+                
+                // Vì mode no-cors không trả về status, ta mặc định là thành công nếu không vào catch
+                return true;
             } catch (err) {
-                console.error('❌ Gửi thất bại:', err);
-                alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
-                return null;
+                console.error('❌ Lỗi gửi data:', err);
+                alert("Có lỗi kết nối. Vui lòng thử lại sau.");
+                return false;
             }
         }
 
@@ -9209,7 +9211,7 @@
             e.preventDefault(); 
             const btn = e.currentTarget;
             const originalText = btn.innerHTML;
-            btn.innerHTML = "Đang gửi..."; // Hiệu ứng loading
+            btn.innerHTML = "Đang gửi...";
             btn.style.pointerEvents = "none";
 
             const name = document.querySelector("#WISH_NAME_INPUT input")?.value.trim() || "";
@@ -9218,14 +9220,19 @@
             const predefined = document.querySelector("#WISH_PREDEFINED_SELECT select")?.value || "";
 
             if (!name) { alert("Vui lòng nhập tên."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
+            
             const combinedMessage = message && predefined ? `${message} / ${predefined}` : message || predefined;
             if (!combinedMessage) { alert("Vui lòng nhập lời chúc."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
 
             const data = { name, relation, wish_message: combinedMessage };
 
-            await postData(data, urlWish);
-            alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc!`);
-            document.querySelector("#WISH_MESSAGE_TEXTAREA textarea").value = ""; // Xóa ô nhập
+            // Gửi với type='wish'
+            const success = await postData(data, 'wish');
+            
+            if (success) {
+                alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc!`);
+                document.querySelector("#WISH_MESSAGE_TEXTAREA textarea").value = ""; 
+            }
             
             btn.innerHTML = originalText;
             btn.style.pointerEvents = "auto";
@@ -9248,6 +9255,8 @@
 
             if (!name) { alert("Vui lòng nhập tên."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
             if (!isAttending) { alert("Vui lòng chọn tham dự hay không."); btn.innerHTML = originalText; btn.style.pointerEvents = "auto"; return; }
+            
+            // Kiểm tra logic nếu đi ăn cưới
             if (isAttending !== "Xin lỗi, tôi bận mất rồi" && (!party || !guestCount)) {
                  alert("Vui lòng chọn tiệc và số lượng khách."); 
                  btn.innerHTML = originalText; 
@@ -9257,8 +9266,12 @@
 
             const data = { name, is_attending: isAttending, party_side: party, guest_count: guestCount, message };
 
-            await postData(data, urlRsvp);
-            alert(`✅ Cảm ơn bạn ${name} đã xác nhận!`);
+            // Gửi với type='rsvp'
+            const success = await postData(data, 'rsvp');
+
+            if (success) {
+                alert(`✅ Cảm ơn bạn ${name} đã xác nhận!`);
+            }
             
             btn.innerHTML = originalText;
             btn.style.pointerEvents = "auto";
@@ -9325,6 +9338,7 @@
 </html>
 <!--Publish time: Sat, 29 Nov 2025 07:24:05 GMT-->
 <!--LadiPage build time: Fri, 28 Nov 2025 10:34:34 GMT-->
+
 
 
 
