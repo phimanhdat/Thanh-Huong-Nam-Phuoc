@@ -9175,84 +9175,87 @@
 
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const urlWish = 'https://service.happyweddingday.vn/api/v1/addWish';
-            const urlRsvp = 'https://service.happyweddingday.vn/api/v1/addRsvp';
-            const source = "";
+document.addEventListener("DOMContentLoaded", function () {
+    const urlWish = 'https://Thanh-Huong-demo-v2/user/save_loichuc.php';
+    const urlRsvp = 'https://Thanh-Huong-demo-v2/user/save_rsvp.php';
+    const source = "";
 
-            async
-            function postData(data, url) {
-                try {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
-                    if (!res.ok) throw new Error(`Lỗi HTTP: ${res.status}`);
-                    return await res.json();
-                } catch (err) {
-                    console.error('❌ Gửi thất bại:', err);
-                    alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
-                }
-            }
-
-            // GỬI LỜI CHÚC
-            document.getElementById("WISH_SUBMIT_BUTTON") ? .addEventListener("click", async() => {
-                const name = document.querySelector("#WISH_NAME_INPUT input") ? .value.trim() || "";
-                const relation = document.querySelector("#WISH_RELATION_SELECT select") ? .value || "";
-                const message = document.querySelector("#WISH_MESSAGE_TEXTAREA textarea") ? .value.trim() || "";
-                const predefined = document.querySelector("#WISH_PREDEFINED_SELECT select") ? .value || "";
-
-                if (!name) return alert("Vui lòng nhập tên.");
-                if (!relation) return alert("Vui lòng chọn mối quan hệ.");
-                if (!message && !predefined) return alert("Vui lòng nhập hoặc chọn lời chúc.");
-
-                const combinedMessage = message && predefined ? `${message} / ${predefined}` : message || predefined;
-
-                const data = {
-                    name,
-                    relation,
-                    wish_message: combinedMessage,
-                        predefined_wish: predefined,
-                        source
-                };
-
-                const result = await postData(data, urlWish);
-                if (result) alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc đến tụi mình!`);
+    async function postData(data, url) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
             });
 
-            // GỬI XÁC NHẬN THAM DỰ
-            document.getElementById("RSVP_SUBMIT_BUTTON") ? .addEventListener("click", async() => {
-                const name = document.querySelector("#RSVP_NAME_INPUT input") ? .value.trim() || "";
-                const isAttending = document.querySelector('#RSVP_ATTENDING_RADIO input[type="radio"]:checked') ? .value;
-                const party = document.querySelector("#RSVP_PARTY_SELECT select") ? .value || "";
-                const guestCount = document.querySelector("#RSVP_GUEST_COUNT_SELECT select") ? .value || "";
-                const message = document.querySelector("#RSVP_MESSAGE_TEXTAREA textarea") ? .value.trim() || "";
+            if (!res.ok) throw new Error(`Lỗi HTTP: ${res.status}`);
+            return await res.json();
+        } catch (err) {
+            console.error('❌ Gửi thất bại:', err);
+            alert("Có lỗi xảy ra. Vui lòng thử lại sau.");
+        }
+    }
 
-                if (!name) return alert("Vui lòng nhập tên.");
-                if (!isAttending) return alert("Vui lòng chọn tham dự hay không.");
-                if (isAttending !== "Xin lỗi, tôi bận mất rồi" && !party)
-                    return alert("Vui lòng chọn tiệc muốn tham dự.");
-                if (isAttending !== "Xin lỗi, tôi bận mất rồi" && !guestCount)
-                    return alert("Vui lòng chọn số lượng khách.");
+    // ================== GỬI LỜI CHÚC ==================
+    document.getElementById("WISH_SUBMIT_BUTTON")?.addEventListener("click", async () => {
+        const name = document.querySelector("#WISH_NAME_INPUT input")?.value.trim() || "";
+        const relation = document.querySelector("#WISH_RELATION_SELECT select")?.value || "";
+        const message = document.querySelector("#WISH_MESSAGE_TEXTAREA textarea")?.value.trim() || "";
+        const predefined = document.querySelector("#WISH_PREDEFINED_SELECT select")?.value || "";
 
-                const data = {
-                    name,
-                    is_attending: isAttending,
-                        party_side: party,
-                        guest_count: guestCount,
-                        message,
-                        source
-                };
+        if (!name) return alert("Vui lòng nhập tên.");
+        if (!relation) return alert("Vui lòng chọn mối quan hệ.");
+        if (!message && !predefined) return alert("Vui lòng nhập hoặc chọn lời chúc.");
 
-                const result = await postData(data, urlRsvp);
-                if (result) alert(`✅ Cảm ơn bạn ${name} đã xác nhận tham dự!`);
-            });
-        });
+        const combinedMessage =
+            message && predefined ? `${message} / ${predefined}` : message || predefined;
 
-    </script>
+        const data = {
+            name,
+            relation,
+            wish_message: combinedMessage,
+            predefined_wish: predefined,
+            source
+        };
+
+        const result = await postData(data, urlWish);
+        if (result) alert(`🎉 Cảm ơn bạn ${name} đã gửi lời chúc đến tụi mình!`);
+    });
+
+    // ================== GỬI XÁC NHẬN THAM DỰ ==================
+    document.getElementById("RSVP_SUBMIT_BUTTON")?.addEventListener("click", async () => {
+        const name = document.querySelector("#RSVP_NAME_INPUT input")?.value.trim() || "";
+        const isAttending = document.querySelector(
+            '#RSVP_ATTENDING_RADIO input[type="radio"]:checked'
+        )?.value;
+        const party = document.querySelector("#RSVP_PARTY_SELECT select")?.value || "";
+        const guestCount = document.querySelector("#RSVP_GUEST_COUNT_SELECT select")?.value || "";
+        const message = document.querySelector("#RSVP_MESSAGE_TEXTAREA textarea")?.value.trim() || "";
+
+        if (!name) return alert("Vui lòng nhập tên.");
+        if (!isAttending) return alert("Vui lòng chọn tham dự hay không.");
+        if (isAttending !== "Xin lỗi, tôi bận mất rồi" && !party)
+            return alert("Vui lòng chọn tiệc muốn tham dự.");
+        if (isAttending !== "Xin lỗi, tôi bận mất rồi" && !guestCount)
+            return alert("Vui lòng chọn số lượng khách.");
+
+        const data = {
+            name,
+            is_attending: isAttending,
+            party_side: party,
+            guest_count: guestCount,
+            message,
+            source
+        };
+
+        const result = await postData(data, urlRsvp);
+        if (result) alert(`✅ Cảm ơn bạn ${name} đã xác nhận tham dự!`);
+    });
+});
+</script>
+
     <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"29085841b8e5436f8a280f5e2fbc45e0","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 
 
@@ -9308,3 +9311,4 @@
 </html>
 <!--Publish time: Sat, 29 Nov 2025 07:24:05 GMT-->
 <!--LadiPage build time: Fri, 28 Nov 2025 10:34:34 GMT-->
+
